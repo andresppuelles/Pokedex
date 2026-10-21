@@ -1,11 +1,75 @@
 package main
 
-import "strings"
+import (
+	"bufio"
+	"fmt"
+	"os"
+	"strings"
+)
+
+func startRepl(cfg *config) {
+	buildCommands(cfg)
+	scanner := bufio.NewScanner(os.Stdin)
+	for {
+		fmt.Print("\nPokedex > ")
+		scanner.Scan()
+		input := scanner.Text()
+		cleaned := cleanInput(input)
+		if len(cleaned) == 0 {
+			continue
+		}
+
+		commandName := cleaned[0]
+		value, ok := (*cfg).commands[commandName]
+		if ok {
+			err := value.callback(cfg)
+			if err != nil {
+				fmt.Println(err)
+			}
+			continue
+		} else {
+			fmt.Println("Unknown command")
+			continue
+		}
+	}
+}
 
 func cleanInput(text string) []string {
+	cleaned := []string{}
 	if len(text) < 1 {
 		return []string{}
 	}
-	cleaned := strings.Fields(text)
+	stripped := strings.Fields(text)
+	for _, word := range stripped {
+		cleaned = append(cleaned, strings.ToLower(word))
+	}
 	return cleaned
+}
+
+type cliCommand struct {
+	name        string
+	description string
+	callback    func(*config) error
+}
+
+type config struct {
+	commands map[string]cliCommand
+}
+
+var supportedCommand map[string]cliCommand
+
+func buildCommands(cfg *config) {
+	supportedCommand = map[string]cliCommand{
+		"exit": {
+			name:        "exit",
+			description: "Exit the Pokedex",
+			callback:    commandExit,
+		},
+		"help": {
+			name:        "help",
+			description: "Displays a help message",
+			callback:    commandHelp,
+		},
+	}
+	cfg.commands = supportedCommand
 }
