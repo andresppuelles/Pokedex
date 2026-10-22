@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"github.com/andresppuelles/pokedexcli/internal/pokecache"
 )
 
 func startRepl(cfg *config) {
@@ -53,13 +54,14 @@ type cliCommand struct {
 }
 
 type config struct {
+	nextLocationURL *string
+    prevLocationURL *string
+    cache pokecache.Cache
 	commands map[string]cliCommand
 }
 
-var supportedCommand map[string]cliCommand
-
 func buildCommands(cfg *config) {
-	supportedCommand = map[string]cliCommand{
+	supportedCommand := map[string]cliCommand{
 		"exit": {
 			name:        "exit",
 			description: "Exit the Pokedex",
@@ -69,6 +71,16 @@ func buildCommands(cfg *config) {
 			name:        "help",
 			description: "Displays a help message",
 			callback:    commandHelp,
+		},
+		"map":{
+			name:        "map",
+			description: "Displays the names of 20 location areas in the Pokemon world, each subsequent call displays the next 20 locations",
+			callback:    commandMap,
+		},
+		"mapb":{
+			name:        "mapb",
+			description: "Displays the names of the previous 20 location areas in the Pokemon world, each subsequent call displays the previous 20 locations",
+			callback:    commandMapb,
 		},
 	}
 	cfg.commands = supportedCommand
